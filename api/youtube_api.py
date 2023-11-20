@@ -47,7 +47,7 @@ def get_random_video(username):
             print("Number of playlists: ", response["pageInfo"]["totalResults"])
 
             # get random nubmer from 0 to totalResults
-            random_item = random.randrange(0, response["pageInfo"]["totalResults"])
+            random_item = random.randrange(0, 50 if response["pageInfo"]["totalResults"] > 50 else response["pageInfo"]["totalResults"] - 1)
             playlist_id = response["items"][random_item]["id"]
 
             print("Selected playlist: ", response["items"][random_item]["snippet"]["title"])
@@ -61,7 +61,7 @@ def get_random_video(username):
                 print("Number of videos: ", response["pageInfo"]["totalResults"])
 
                 # get random nubmer from 0 to totalResults
-                random_item = random.randrange(0, response["pageInfo"]["totalResults"])
+                random_item = random.randrange(0, 50 if response["pageInfo"]["totalResults"] > 50 else response["pageInfo"]["totalResults"] - 1)
                 video_id = response["items"][random_item]["contentDetails"]["videoId"]
 
                 print("Selected video: ", response["items"][random_item]["snippet"]["title"])
