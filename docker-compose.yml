@@ -1,0 +1,15 @@
+services:
+  youtube-random:
+    env_file:
+      - .env
+    container_name: youtube-random
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: ["python", "main.py", "--reload"]
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
