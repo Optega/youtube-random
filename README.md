@@ -1,6 +1,6 @@
 # YouTube Random video from channel
 
-Telegram bot to fetch random videos from a YouTube channel
+Telegram bot to fetch random videos from a YouTube channel.
 
 ## Tech Stack
 
@@ -47,6 +47,13 @@ Start project
 ```bash
   docker compose up -d youtube-random
 ```
+
+## Requirements
+
+| Library                  | Version |
+| ------------------------ | ------- |
+| aiogram                  | 3.1.1   |
+| google-api-python-client | 2.108.0 |
 
 ## Usage
 
