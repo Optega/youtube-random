@@ -24,10 +24,12 @@ def get_random_video(username):
     # search symbol @ in username and remove all before it
     if "@" in username:
         username = username.split("@")[1]
-
     # search symbol / in username and remove all after it
     if "/" in username:
         username = username.split("/")[0]
+    # search symbol ? in username and remove all after it
+    if "?" in username:
+        username = username.split("?")[0]
 
     request = youtube.search().list(part="id,snippet", maxResults=1, q=username, type="channel")
     response = request.execute()
