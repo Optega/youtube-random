@@ -9,64 +9,89 @@ import random
 
 import googleapiclient.discovery
 
+# TODO: check if url is video
 
-def get_random_video(username):
-    # Disable OAuthlib's HTTPS verification when running locally.
-    # *DO NOT* leave this option enabled in production.
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-    api_service_name = "youtube"
-    api_version = "v3"
-    DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
+# Disable OAuthlib's HTTPS verification when running locally.
+# *DO NOT* leave this option enabled in production.
+os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "1"
 
-    youtube = googleapiclient.discovery.build(api_service_name, api_version, developerKey=DEVELOPER_KEY)
+API_SERVICE_NAME = "youtube"
+API_VERSION = "v3"
+DEVELOPER_KEY = os.getenv("YOUTUBE_API_KEY")
 
-    # search symbol @ in username and remove all before it
-    if "@" in username:
-        username = username.split("@")[1]
-    # search symbol / in username and remove all after it
-    if "/" in username:
-        username = username.split("/")[0]
-    # search symbol ? in username and remove all after it
-    if "?" in username:
-        username = username.split("?")[0]
+youtube = googleapiclient.discovery.build(API_SERVICE_NAME, API_VERSION, developerKey=DEVELOPER_KEY)
 
-    request = youtube.search().list(part="id,snippet", maxResults=1, q=username, type="channel")
-    response = request.execute()
 
-    if response["pageInfo"]["totalResults"] == 0:
-        print("No channel found")
-    else:
-        print(f"Channel: {username}")
-        channel_id = response["items"][0]["id"]["channelId"]
+def get_random_video(url):
+    useraname = url
 
-        request = youtube.playlists().list(part="contentDetails, id, localizations, player, snippet, status", channelId=channel_id, maxResults=50)
+    if "watch" in url:
+        video_id = url.split("v=")[1]
+
+        # search symbol & in video_id and remove all after it
+        if "&" in video_id:
+            video_id = video_id.split("&")[0]
+
+        request = youtube.videos().list(part="id,snippet", id=video_id)
         response = request.execute()
 
         if response["pageInfo"]["totalResults"] == 0:
-            print("No playlists found")
+            print("No video found")
         else:
-            print("Number of playlists: ", response["pageInfo"]["totalResults"])
+            print(f"Channel: {response['items'][0]['snippet']['channelTitle']}")
+            channel_id = response["items"][0]["snippet"]["channelId"]
+            return get_random_video_by_channel_id(channel_id)
+    else:
+        # search symbol @ in username and remove all before it
+        if "@" in url:
+            username = url.split("@")[1]
+        # search symbol / in username and remove all after it
+        if "/" in url:
+            username = url.split("/")[0]
+        # search symbol ? in username and remove all after it
+        if "?" in url:
+            username = url.split("?")[0]
+
+        request = youtube.search().list(part="id,snippet", maxResults=1, q=username, type="channel")
+        response = request.execute()
+
+        if response["pageInfo"]["totalResults"] == 0:
+            print("No channel found")
+        else:
+            print(f"Channel: {username}")
+            channel_id = response["items"][0]["id"]["channelId"]
+            return get_random_video_by_channel_id(channel_id)
+
+
+def get_random_video_by_channel_id(channel_id):
+    request = youtube.playlists().list(part="contentDetails, id, localizations, player, snippet, status", channelId=channel_id, maxResults=50)
+    response = request.execute()
+
+    if response["pageInfo"]["totalResults"] == 0:
+        print("No playlists found")
+    else:
+        print("Number of playlists: ", response["pageInfo"]["totalResults"])
+
+        # get random nubmer from 0 to totalResults
+        random_item = random.randrange(0, 50 if response["pageInfo"]["totalResults"] > 50 else response["pageInfo"]["totalResults"] - 1)
+        playlist_id = response["items"][random_item]["id"]
+
+        print("Selected playlist: ", response["items"][random_item]["snippet"]["title"])
+
+        request = youtube.playlistItems().list(part="contentDetails, id, snippet, status", maxResults=50, playlistId=playlist_id)
+        response = request.execute()
+
+        if response["pageInfo"]["totalResults"] == 0:
+            print("No videos found")
+        else:
+            print("Number of videos: ", response["pageInfo"]["totalResults"])
 
             # get random nubmer from 0 to totalResults
             random_item = random.randrange(0, 50 if response["pageInfo"]["totalResults"] > 50 else response["pageInfo"]["totalResults"] - 1)
-            playlist_id = response["items"][random_item]["id"]
+            video_id = response["items"][random_item]["contentDetails"]["videoId"]
 
-            print("Selected playlist: ", response["items"][random_item]["snippet"]["title"])
+            print("Selected video: ", response["items"][random_item]["snippet"]["title"])
+            print("Video URL: ", f"https://www.youtube.com/watch?v={video_id}")
 
-            request = youtube.playlistItems().list(part="contentDetails, id, snippet, status", maxResults=50, playlistId=playlist_id)
-            response = request.execute()
-
-            if response["pageInfo"]["totalResults"] == 0:
-                print("No videos found")
-            else:
-                print("Number of videos: ", response["pageInfo"]["totalResults"])
-
-                # get random nubmer from 0 to totalResults
-                random_item = random.randrange(0, 50 if response["pageInfo"]["totalResults"] > 50 else response["pageInfo"]["totalResults"] - 1)
-                video_id = response["items"][random_item]["contentDetails"]["videoId"]
-
-                print("Selected video: ", response["items"][random_item]["snippet"]["title"])
-                print("Video URL: ", f"https://www.youtube.com/watch?v={video_id}")
-
-                return f"https://www.youtube.com/watch?v={video_id}"
+            return f"https://www.youtube.com/watch?v={video_id}"
